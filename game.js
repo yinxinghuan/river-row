@@ -8,7 +8,7 @@
 // Three.js v0.160 ES module. Single file. CDN importmap (see index.html).
 
 import * as THREE from 'three';
-import { applyCurve, updateCurve } from './lib/curve.js?v=3';
+import { applyCurve, updateCurve } from './lib/curve.js?v=4';
 import { buildWater } from './lib/water.js?v=7';
 import { createSegmentManager, TEMPERATE } from './lib/segments.js?v=2';
 import { createWorld } from './lib/world.js?v=1';
