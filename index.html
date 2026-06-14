@@ -134,27 +134,96 @@
   }
   #title.hidden { opacity:0; transform:translate(-50%,-12px); }
 
-  /* ── Steering hint — shown only in the first second of play ── */
+  /* ── Tutorial demo — full animated walk-through at preroll. Shows the
+        press-charge-release cycle every 3 seconds with a real-looking
+        radial ring fill and side-tap arrows. ── */
   #hint {
-    bottom:calc(14% + env(safe-area-inset-bottom)); left:50%; transform:translateX(-50%);
-    display:flex; flex-direction:column; align-items:center; gap:10px;
-    opacity:0; transition:opacity .4s ease;
+    bottom:calc(13% + env(safe-area-inset-bottom)); left:50%; transform:translateX(-50%);
+    display:flex; flex-direction:column; align-items:center; gap:14px;
+    opacity:0; transition:opacity .45s ease;
     pointer-events:none;
   }
   #hint.show { opacity:1; }
-  #hint .finger {
-    position:relative; width:48px; height:48px;
-    animation:rr-sweep 1.8s ease-in-out infinite;
+  #hint .tut-demo {
+    position:relative; width:128px; height:128px;
   }
-  #hint .finger svg { width:100%; height:100%; display:block; fill:rgba(255,255,255,.96);
-    filter:drop-shadow(0 0 6px rgba(22,135,124,.55)) drop-shadow(0 2px 4px rgba(0,0,0,.22)); }
-  #hint .label {
-    font-weight:600; font-size:14px; letter-spacing:.04em;
-    color:#fff; text-shadow:0 2px 8px rgba(22,40,82,.6);
+  #hint .tut-demo svg.ring {
+    position:absolute; inset:0;
+    width:100%; height:100%;
+    display:block;
   }
-  @keyframes rr-sweep {
-    0%,100% { transform:translateX(-20px) rotate(-12deg); }
-    50%     { transform:translateX(20px) rotate(12deg); }
+  #hint .tut-demo svg.ring .bg {
+    fill:rgba(22,32,56,.28);
+    stroke:rgba(255,255,255,.55); stroke-width:3;
+  }
+  #hint .tut-demo svg.ring .fill {
+    fill:none;
+    stroke:#4dd683; stroke-width:6; stroke-linecap:round;
+    stroke-dasharray:283; stroke-dashoffset:283;
+    filter:drop-shadow(0 0 6px rgba(77,212,195,.7));
+    transform:rotate(-90deg); transform-origin:64px 64px;
+    animation:rr-tut-charge 3s ease-in-out infinite;
+  }
+  #hint .tut-demo .finger {
+    position:absolute; left:50%; top:50%;
+    width:46px; height:46px;
+    transform:translate(-50%, -50%);
+    animation:rr-tut-finger 3s ease-in-out infinite;
+  }
+  #hint .tut-demo .finger svg {
+    width:100%; height:100%; display:block; fill:#fff;
+    filter:drop-shadow(0 0 6px rgba(22,135,124,.6)) drop-shadow(0 2px 4px rgba(0,0,0,.32));
+  }
+  #hint .tut-label {
+    font-weight:700; font-size:14px; letter-spacing:.16em; text-transform:uppercase;
+    color:#fff; text-shadow:0 2px 8px rgba(22,40,82,.65);
+  }
+  #hint .tut-steer {
+    display:flex; align-items:center; gap:8px;
+    font-weight:600; font-size:12px; letter-spacing:.08em; text-transform:uppercase;
+    color:rgba(255,255,255,.86); text-shadow:0 2px 6px rgba(22,40,82,.5);
+  }
+  #hint .tut-steer .arrow {
+    display:inline-block; font-size:18px;
+    animation:rr-tut-arrow 1.4s ease-in-out infinite;
+  }
+  #hint .tut-steer .arrow.r { animation-delay:.7s; }
+  @keyframes rr-tut-charge {
+    0%, 8%   { stroke-dashoffset:283; }
+    60%, 70% { stroke-dashoffset:0; }
+    75%, 100% { stroke-dashoffset:283; }
+  }
+  @keyframes rr-tut-finger {
+    0%, 8%    { transform:translate(-50%, -50%) scale(1); }
+    18%, 60%  { transform:translate(-50%, -42%) scale(.92); }
+    72%       { transform:translate(-50%, -62%) scale(1.12); }
+    82%, 100% { transform:translate(-50%, -50%) scale(1); }
+  }
+  @keyframes rr-tut-arrow {
+    0%, 100% { transform:translateX(0); opacity:.7; }
+    50%      { transform:translateX(-4px); opacity:1; }
+  }
+
+  /* ── In-play touch indicator — ring + center dot at finger position,
+        appears on pointer-down, follows the finger ── */
+  #touch {
+    position:fixed; pointer-events:none; z-index:7;
+    width:32px; height:32px; margin-left:-16px; margin-top:-16px;
+    border-radius:50%;
+    background:radial-gradient(circle, rgba(255,255,255,.88) 0%, rgba(255,255,255,.4) 35%, rgba(255,255,255,0) 70%);
+    opacity:0; transition:opacity .12s ease;
+  }
+  #touch.show { opacity:1; }
+  #touch-ripple {
+    position:fixed; pointer-events:none; z-index:7;
+    width:18px; height:18px; margin-left:-9px; margin-top:-9px;
+    border:2px solid rgba(255,255,255,.85); border-radius:50%;
+    opacity:0;
+  }
+  #touch-ripple.go { animation:rr-touch-ripple .55s ease-out forwards; }
+  @keyframes rr-touch-ripple {
+    0%   { transform:scale(.6); opacity:.9; }
+    100% { transform:scale(4.5); opacity:0; }
   }
 
   /* ── Death overlay ── */
@@ -333,11 +402,20 @@
     <span class="sub">hold &amp; release to row</span>
   </div>
   <div id="hint" class="hud">
-    <div class="finger">
-      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 11.24V7.5C9 6.12 10.12 5 11.5 5S14 6.12 14 7.5v3.74c1.21-.81 2-2.18 2-3.74C16 5.01 13.99 3 11.5 3S7 5.01 7 7.5c0 1.56.79 2.93 2 3.74zm9.84 4.63l-4.54-2.26c-.17-.07-.35-.11-.54-.11H13v-6c0-.83-.67-1.5-1.5-1.5S10 6.67 10 7.5v10.74l-3.43-.72c-.08-.01-.15-.03-.24-.03-.31 0-.59.13-.79.33l-.79.8 4.94 4.94c.27.27.65.44 1.06.44h6.79c.75 0 1.33-.55 1.44-1.28l.75-5.27c.01-.07.02-.14.02-.2 0-.62-.38-1.16-.92-1.38z"/></svg>
+    <div class="tut-demo">
+      <svg class="ring" viewBox="0 0 128 128">
+        <circle class="bg" cx="64" cy="64" r="45"/>
+        <circle class="fill" cx="64" cy="64" r="45"/>
+      </svg>
+      <div class="finger">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 11.24V7.5C9 6.12 10.12 5 11.5 5S14 6.12 14 7.5v3.74c1.21-.81 2-2.18 2-3.74C16 5.01 13.99 3 11.5 3S7 5.01 7 7.5c0 1.56.79 2.93 2 3.74zm9.84 4.63l-4.54-2.26c-.17-.07-.35-.11-.54-.11H13v-6c0-.83-.67-1.5-1.5-1.5S10 6.67 10 7.5v10.74l-3.43-.72c-.08-.01-.15-.03-.24-.03-.31 0-.59.13-.79.33l-.79.8 4.94 4.94c.27.27.65.44 1.06.44h6.79c.75 0 1.33-.55 1.44-1.28l.75-5.27c.01-.07.02-.14.02-.2 0-.62-.38-1.16-.92-1.38z"/></svg>
+      </div>
     </div>
-    <div class="label">Hold to charge · release to row · tap side to steer</div>
+    <div class="tut-label">Hold &amp; Release to Row</div>
+    <div class="tut-steer"><span class="arrow">◀</span><span>tap side to steer</span><span class="arrow r">▶</span></div>
   </div>
+  <div id="touch"></div>
+  <div id="touch-ripple"></div>
   <div id="lb"></div>
 </div>
 
@@ -372,7 +450,7 @@
 </script>
 
 <script type="module">
-import { startGame } from './game.js?v=39';
+import { startGame } from './game.js?v=40';
 
 const $ = (s) => document.querySelector(s);
 const scoreEl = $('#score');
@@ -386,6 +464,8 @@ const finalBestEl  = $('#finalBest');
 const hpFillEl = hpEl.querySelector('.fill');
 const chargeEl = $('#charge');
 const chargeFillEl = chargeEl.querySelector('.fill');
+const touchEl = $('#touch');
+const touchRippleEl = $('#touch-ripple');
 const CHARGE_CIRC = 226.2;          // 2π × r (r=36)
 
 let lastScore = 0;
@@ -435,7 +515,7 @@ const hud = {
       comboEl.classList.remove('show');
       hpEl.classList.remove('show');
       titleEl.classList.remove('hidden');
-      hintEl.classList.remove('show');
+      hintEl.classList.add('show');                // tutorial visible at preroll
       overEl.classList.remove('show');
       lastScore = 0;
       // reset HP bar to full
@@ -446,11 +526,8 @@ const hud = {
       scoreEl.classList.add('show');
       hpEl.classList.add('show');
       titleEl.classList.add('hidden');
-      hintEl.classList.add('show');
+      hintEl.classList.remove('show');             // tutorial fades out once play starts
       overEl.classList.remove('show');
-      // hide drag hint after 1.4s
-      clearTimeout(window.__rr_hintT);
-      window.__rr_hintT = setTimeout(() => hintEl.classList.remove('show'), 1400);
     } else if (p === 'dead') {
       overEl.classList.add('show');
       comboEl.classList.remove('show');
