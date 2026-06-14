@@ -9,7 +9,7 @@
 
 import * as THREE from 'three';
 import { applyCurve, updateCurve } from './lib/curve.js?v=4';
-import { buildWater } from './lib/water.js?v=8';
+import { buildWater } from './lib/water.js?v=9';
 import { createSegmentManager, TEMPERATE } from './lib/segments.js?v=2';
 import { createWorld } from './lib/world.js?v=3';
 import { buildBoat, buildWake, attachRower, tickBoat } from './lib/boat.js?v=7';
@@ -33,10 +33,11 @@ export function startGame({ canvas, hud }) {
 
   // ── scene + fog ────────────────────────────────────────────────────────────
   const scene = new THREE.Scene();
-  // Push fog far so mid-distance water keeps its base colour and reads as
-  // a coherent ribbon, not a fade-to-fog haze. Curve still handles "emerging
-  // from below the horizon" — fog only kicks in past 150 units.
-  scene.fog = new THREE.Fog(TEMPERATE.fog.getHex(), 35, 180);
+  // Push fog far enough that mid-distance water doesn't melt into the warm
+  // canyon sky and look like the water has "disappeared". Curve still hides
+  // the truly far horizon; fog only takes over past 60 units and is only
+  // fully opaque past 280.
+  scene.fog = new THREE.Fog(TEMPERATE.fog.getHex(), 60, 280);
 
   // ── camera (perspective trailing) ──────────────────────────────────────────
   // Lower + closer than sky-leap to keep the rower readable in the lower third
