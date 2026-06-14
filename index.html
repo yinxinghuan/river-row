@@ -45,26 +45,57 @@
     100% { transform:translateX(-50%) scale(1); }
   }
 
-  /* ── Hearts — three petal hearts top-left, fade to grey as HP drops ── */
+  /* ── HP bar — slim horizontal capsule top-left ── */
   #hp {
     top:max(28px,calc(env(safe-area-inset-top) + 14px)); left:12px;
-    display:flex; gap:6px; opacity:0; transition:opacity .3s ease;
+    width:148px; height:14px; border-radius:999px;
+    background:linear-gradient(180deg, rgba(22,40,82,.5), rgba(22,40,82,.34));
+    border:1px solid rgba(255,255,255,.55);
+    overflow:hidden;
+    box-shadow:0 4px 12px rgba(0,0,0,.22), inset 0 1px 2px rgba(0,0,0,.28);
+    opacity:0; transition:opacity .3s ease;
   }
   #hp.show { opacity:1; }
-  #hp .h {
-    width:30px; height:30px; display:block;
-    filter:drop-shadow(0 2px 4px rgba(22,40,82,.4));
-    transition:filter .25s ease, transform .25s ease;
+  #hp .fill {
+    height:100%; width:100%; border-radius:999px;
+    background:linear-gradient(90deg, #ff5a6a 0%, #ff9b4d 24%, #ffd84d 52%, #4dd683 80%);
+    transition:width .25s ease, filter .25s ease;
+    box-shadow:0 0 12px rgba(77,212,195,.45), inset 0 1px 0 rgba(255,255,255,.45);
+    transform-origin:left center;
   }
-  #hp .h.gone {
-    filter:drop-shadow(0 1px 2px rgba(22,40,82,.3)) saturate(0) brightness(.7);
-    transform:scale(.86);
+  #hp .fill.low {
+    animation:rr-hp-pulse .65s ease-in-out infinite;
   }
-  #hp .h.pop { animation:rr-hpop .35s cubic-bezier(.3,1.6,.5,1); }
-  @keyframes rr-hpop {
-    0%   { transform:scale(1.45); filter:drop-shadow(0 1px 2px rgba(22,40,82,.3)) saturate(0) brightness(1.2); }
-    100% { transform:scale(.86); filter:drop-shadow(0 1px 2px rgba(22,40,82,.3)) saturate(0) brightness(.7); }
+  @keyframes rr-hp-pulse {
+    0%,100% { filter:brightness(1); }
+    50%     { filter:brightness(.55) saturate(1.4); }
   }
+
+  /* ── Charge ring — fills around the touch point while finger is held ── */
+  #charge {
+    position:fixed; pointer-events:none; z-index:8;
+    width:96px; height:96px;
+    margin-left:-48px; margin-top:-48px;
+    opacity:0; transition:opacity .12s ease;
+  }
+  #charge.show { opacity:.95; }
+  #charge svg { width:100%; height:100%; display:block; }
+  #charge .bg {
+    fill:rgba(22,32,56,.22);
+    stroke:rgba(255,255,255,.55);
+    stroke-width:3;
+  }
+  #charge .fill {
+    fill:none;
+    stroke:#4dd683;
+    stroke-width:6;
+    stroke-linecap:round;
+    filter:drop-shadow(0 0 6px rgba(77,212,195,.85));
+    transform:rotate(-90deg);
+    transform-origin:48px 48px;
+    transition:stroke-dashoffset .08s linear, stroke .2s ease;
+  }
+  #charge.full .fill { stroke:#ffd84d; filter:drop-shadow(0 0 9px rgba(255,216,77,.9)); }
 
   /* ── Combo chip — frosted pill below score, shows during chain ── */
   #combo {
@@ -291,20 +322,21 @@
   <canvas id="c"></canvas>
   <div id="score" class="hud">0</div>
   <div id="combo" class="hud"></div>
-  <div id="hp" class="hud">
-    <svg class="h" viewBox="0 0 24 24"><path d="M12 21s-7-4.5-9.5-9C.5 7.5 4 3 8 3c2 0 3 1 4 2 1-1 2-2 4-2 4 0 7.5 4.5 5.5 9C19 16.5 12 21 12 21Z" fill="#ff4d77"/></svg>
-    <svg class="h" viewBox="0 0 24 24"><path d="M12 21s-7-4.5-9.5-9C.5 7.5 4 3 8 3c2 0 3 1 4 2 1-1 2-2 4-2 4 0 7.5 4.5 5.5 9C19 16.5 12 21 12 21Z" fill="#ff4d77"/></svg>
-    <svg class="h" viewBox="0 0 24 24"><path d="M12 21s-7-4.5-9.5-9C.5 7.5 4 3 8 3c2 0 3 1 4 2 1-1 2-2 4-2 4 0 7.5 4.5 5.5 9C19 16.5 12 21 12 21Z" fill="#ff4d77"/></svg>
-  </div>
+  <div id="hp" class="hud"><div class="fill"></div></div>
+  <div id="charge"><svg viewBox="0 0 96 96">
+    <circle class="bg" cx="48" cy="48" r="36"/>
+    <circle class="fill" cx="48" cy="48" r="36"
+            stroke-dasharray="226.2" stroke-dashoffset="226.2"/>
+  </svg></div>
   <div id="title" class="hud">
     <span class="brand">River Row</span>
-    <span class="sub">tap anywhere to row</span>
+    <span class="sub">hold &amp; release to row</span>
   </div>
   <div id="hint" class="hud">
     <div class="finger">
       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 11.24V7.5C9 6.12 10.12 5 11.5 5S14 6.12 14 7.5v3.74c1.21-.81 2-2.18 2-3.74C16 5.01 13.99 3 11.5 3S7 5.01 7 7.5c0 1.56.79 2.93 2 3.74zm9.84 4.63l-4.54-2.26c-.17-.07-.35-.11-.54-.11H13v-6c0-.83-.67-1.5-1.5-1.5S10 6.67 10 7.5v10.74l-3.43-.72c-.08-.01-.15-.03-.24-.03-.31 0-.59.13-.79.33l-.79.8 4.94 4.94c.27.27.65.44 1.06.44h6.79c.75 0 1.33-.55 1.44-1.28l.75-5.27c.01-.07.02-.14.02-.2 0-.62-.38-1.16-.92-1.38z"/></svg>
     </div>
-    <div class="label">Drag to steer</div>
+    <div class="label">Hold to charge · release to row · tap side to steer</div>
   </div>
   <div id="lb"></div>
 </div>
@@ -340,18 +372,21 @@
 </script>
 
 <script type="module">
-import { startGame } from './game.js?v=38';
+import { startGame } from './game.js?v=39';
 
 const $ = (s) => document.querySelector(s);
 const scoreEl = $('#score');
 const comboEl = $('#combo');
 const hpEl    = $('#hp');
-const hpHearts = hpEl.querySelectorAll('.h');
 const titleEl = $('#title');
 const hintEl  = $('#hint');
 const overEl  = $('#over');
 const finalScoreEl = $('#finalScore');
 const finalBestEl  = $('#finalBest');
+const hpFillEl = hpEl.querySelector('.fill');
+const chargeEl = $('#charge');
+const chargeFillEl = chargeEl.querySelector('.fill');
+const CHARGE_CIRC = 226.2;          // 2π × r (r=36)
 
 let lastScore = 0;
 let scoreBumpT = null;
@@ -378,14 +413,21 @@ const hud = {
   },
   setBest(n)  { finalBestEl.textContent = String(n); },
   setHp(n) {
-    hpHearts.forEach((h, i) => {
-      const wasGone = h.classList.contains('gone');
-      const nowGone = i >= n;
-      if (nowGone && !wasGone) {
-        h.classList.remove('pop'); void h.offsetWidth; h.classList.add('pop');
-      }
-      h.classList.toggle('gone', nowGone);
-    });
+    // n is 0..100 now
+    const pct = Math.max(0, Math.min(100, n));
+    hpFillEl.style.width = pct + '%';
+    hpFillEl.classList.toggle('low', pct < 30);
+  },
+  setCharge(t, x, y) {
+    if (t > 0) {
+      chargeEl.classList.add('show');
+      chargeEl.classList.toggle('full', t >= 0.98);
+      chargeEl.style.left = x + 'px';
+      chargeEl.style.top  = y + 'px';
+      chargeFillEl.style.strokeDashoffset = String(CHARGE_CIRC * (1 - t));
+    } else {
+      chargeEl.classList.remove('show', 'full');
+    }
   },
   setPhase(p) {
     if (p === 'preroll') {
@@ -396,8 +438,10 @@ const hud = {
       hintEl.classList.remove('show');
       overEl.classList.remove('show');
       lastScore = 0;
-      // reset hearts to full
-      hpHearts.forEach(h => h.classList.remove('gone', 'pop'));
+      // reset HP bar to full
+      hpFillEl.style.width = '100%';
+      hpFillEl.classList.remove('low');
+      chargeEl.classList.remove('show', 'full');
     } else if (p === 'play') {
       scoreEl.classList.add('show');
       hpEl.classList.add('show');
@@ -412,6 +456,7 @@ const hud = {
       comboEl.classList.remove('show');
       hpEl.classList.remove('show');
       hintEl.classList.remove('show');
+      chargeEl.classList.remove('show', 'full');
     }
   },
   setDeath({ score, best }) {
