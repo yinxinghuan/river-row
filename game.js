@@ -9,12 +9,12 @@
 
 import * as THREE from 'three';
 import { applyCurve, updateCurve } from './lib/curve.js?v=7';
-import { buildWater } from './lib/water.js?v=14';
+import { buildWater } from './lib/water.js?v=15';
 import { createSegmentManager, TEMPERATE } from './lib/segments.js?v=3';
 import { createWorld } from './lib/world.js?v=4';
 import { buildBoat, buildWake, attachRower, tickBoat } from './lib/boat.js?v=9';
 import { CHARACTERS } from './builders/characters.js?v=1';
-import { createGameplay } from './lib/gameplay.js?v=8';
+import { createGameplay } from './lib/gameplay.js?v=9';
 import { createParticles } from './lib/particles.js?v=2';
 
 export function startGame({ canvas, hud }) {
