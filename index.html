@@ -103,34 +103,6 @@
   }
   #title.hidden { opacity:0; transform:translate(-50%,-12px); }
 
-  /* ── Big pulsing CTA — primary start button ── */
-  #start {
-    bottom:calc(18% + env(safe-area-inset-bottom)); left:50%; transform:translateX(-50%);
-    pointer-events:auto;
-    min-width:220px; min-height:60px; padding:0 36px; border-radius:999px;
-    font-family:var(--font); font-weight:700; font-size:24px; letter-spacing:.04em;
-    color:#fff; border:none; cursor:pointer;
-    background:linear-gradient(150deg, #4dd4c3, var(--teal) 50%, var(--teal-deep));
-    box-shadow:
-      0 14px 32px rgba(22,135,124,.55),
-      inset 0 2px 0 rgba(255,255,255,.6),
-      inset 0 -2px 0 rgba(8,82,76,.35);
-    text-shadow:0 2px 3px rgba(8,82,76,.5);
-    -webkit-tap-highlight-color:transparent;
-    opacity:0; transition:opacity .35s ease, transform .12s ease, box-shadow .12s ease;
-    animation:rr-pulse 1.6s ease-in-out infinite;
-  }
-  #start.show { opacity:1; }
-  #start:active {
-    transform:translateX(-50%) translateY(2px);
-    box-shadow:0 6px 18px rgba(22,135,124,.45), inset 0 2px 0 rgba(255,255,255,.45);
-    animation:none;
-  }
-  @keyframes rr-pulse {
-    0%,100% { box-shadow:0 14px 32px rgba(22,135,124,.55), 0 0 0 0 rgba(77,212,195,.55), inset 0 2px 0 rgba(255,255,255,.6); }
-    60%     { box-shadow:0 14px 32px rgba(22,135,124,.55), 0 0 0 22px rgba(77,212,195,0), inset 0 2px 0 rgba(255,255,255,.6); }
-  }
-
   /* ── Steering hint — shown only in the first second of play ── */
   #hint {
     bottom:calc(14% + env(safe-area-inset-bottom)); left:50%; transform:translateX(-50%);
@@ -326,9 +298,8 @@
   </div>
   <div id="title" class="hud">
     <span class="brand">River Row</span>
-    <span class="sub">endless rapids</span>
+    <span class="sub">tap anywhere to row</span>
   </div>
-  <button id="start" class="hud">Tap to Row</button>
   <div id="hint" class="hud">
     <div class="finger">
       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 11.24V7.5C9 6.12 10.12 5 11.5 5S14 6.12 14 7.5v3.74c1.21-.81 2-2.18 2-3.74C16 5.01 13.99 3 11.5 3S7 5.01 7 7.5c0 1.56.79 2.93 2 3.74zm9.84 4.63l-4.54-2.26c-.17-.07-.35-.11-.54-.11H13v-6c0-.83-.67-1.5-1.5-1.5S10 6.67 10 7.5v10.74l-3.43-.72c-.08-.01-.15-.03-.24-.03-.31 0-.59.13-.79.33l-.79.8 4.94 4.94c.27.27.65.44 1.06.44h6.79c.75 0 1.33-.55 1.44-1.28l.75-5.27c.01-.07.02-.14.02-.2 0-.62-.38-1.16-.92-1.38z"/></svg>
@@ -369,7 +340,7 @@
 </script>
 
 <script type="module">
-import { startGame } from './game.js?v=27';
+import { startGame } from './game.js?v=28';
 
 const $ = (s) => document.querySelector(s);
 const scoreEl = $('#score');
@@ -378,7 +349,6 @@ const hpEl    = $('#hp');
 const hpHearts = hpEl.querySelectorAll('.h');
 const titleEl = $('#title');
 const hintEl  = $('#hint');
-const startEl = $('#start');
 const overEl  = $('#over');
 const finalScoreEl = $('#finalScore');
 const finalBestEl  = $('#finalBest');
@@ -423,7 +393,6 @@ const hud = {
       comboEl.classList.remove('show');
       hpEl.classList.remove('show');
       titleEl.classList.remove('hidden');
-      startEl.classList.add('show');
       hintEl.classList.remove('show');
       overEl.classList.remove('show');
       lastScore = 0;
@@ -433,7 +402,6 @@ const hud = {
       scoreEl.classList.add('show');
       hpEl.classList.add('show');
       titleEl.classList.add('hidden');
-      startEl.classList.remove('show');
       hintEl.classList.add('show');
       overEl.classList.remove('show');
       // hide drag hint after 1.4s
@@ -571,16 +539,6 @@ $('#again').addEventListener('click', () => {
   if (window.__rr && window.__rr.gameplay) window.__rr.gameplay.reset();
 });
 overRankEl.addEventListener('click', openLbFull);
-
-// Big CTA — kick off play through the same gameplay entry point as a canvas tap
-startEl.addEventListener('click', (ev) => {
-  ev.stopPropagation();
-  if (window.__rr && window.__rr.gameplay) {
-    const w = document.body.clientWidth || window.innerWidth;
-    window.__rr.gameplay.onPointerDown(w/2, 600, w);
-    window.__rr.gameplay.onPointerUp();
-  }
-});
 </script>
 </body>
 </html>
