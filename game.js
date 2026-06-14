@@ -14,8 +14,9 @@ import { createSegmentManager, TEMPERATE } from './lib/segments.js?v=3';
 import { createWorld } from './lib/world.js?v=4';
 import { buildBoat, buildWake, attachRower, tickBoat } from './lib/boat.js?v=10';
 import { CHARACTERS } from './builders/characters.js?v=1';
-import { createGameplay } from './lib/gameplay.js?v=10';
+import { createGameplay } from './lib/gameplay.js?v=11';
 import { createParticles } from './lib/particles.js?v=2';
+import { createAudio } from './lib/audio.js?v=1';
 
 export function startGame({ canvas, hud }) {
   // ── renderer ───────────────────────────────────────────────────────────────
@@ -124,6 +125,9 @@ export function startGame({ canvas, hud }) {
   // ── particles pool (shared across bow / capsize / pickup) ──────────────────
   const particles = createParticles({ scene });
 
+  // ── procedural Web Audio SFX (primed on first user gesture) ────────────────
+  const audio = createAudio();
+
   // ── capture rower's base rotation for restoration after death animation ────
   const baseRowerRot = boat.userData.rower
     ? boat.userData.rower.rotation.clone()
@@ -131,7 +135,7 @@ export function startGame({ canvas, hud }) {
 
   // ── gameplay loop ──────────────────────────────────────────────────────────
   const gameplay = createGameplay({
-    boat, camera, scene, water, segments, colliders, pickups, hud, baseRowerRot, particles, wake, world,
+    boat, camera, scene, water, segments, colliders, pickups, hud, baseRowerRot, particles, wake, world, audio,
   });
 
   // ── resize ─────────────────────────────────────────────────────────────────
@@ -191,5 +195,5 @@ export function startGame({ canvas, hud }) {
   loop();
 
   // expose for debug / screenshot tooling
-  window.__rr = { scene, camera, renderer, water, boat, wake, pick, segments, world, gameplay, colliders, pickups, particles };
+  window.__rr = { scene, camera, renderer, water, boat, wake, pick, segments, world, gameplay, colliders, pickups, particles, audio };
 }
