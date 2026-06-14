@@ -14,9 +14,9 @@ import { createSegmentManager, TEMPERATE } from './lib/segments.js?v=3';
 import { createWorld } from './lib/world.js?v=4';
 import { buildBoat, buildWake, attachRower, tickBoat } from './lib/boat.js?v=10';
 import { CHARACTERS } from './builders/characters.js?v=1';
-import { createGameplay } from './lib/gameplay.js?v=11';
+import { createGameplay } from './lib/gameplay.js?v=12';
 import { createParticles } from './lib/particles.js?v=2';
-import { createAudio } from './lib/audio.js?v=1';
+import { createAudio } from './lib/audio.js?v=2';
 
 export function startGame({ canvas, hud }) {
   // ── renderer ───────────────────────────────────────────────────────────────
