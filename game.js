@@ -12,9 +12,9 @@ import { applyCurve, updateCurve } from './lib/curve.js?v=3';
 import { buildWater } from './lib/water.js?v=7';
 import { createSegmentManager, TEMPERATE } from './lib/segments.js?v=2';
 import { createWorld } from './lib/world.js?v=1';
-import { buildBoat, buildWake, attachRower, tickBoat } from './lib/boat.js?v=4';
+import { buildBoat, buildWake, attachRower, tickBoat } from './lib/boat.js?v=6';
 import { CHARACTERS } from './builders/characters.js?v=1';
-import { createGameplay } from './lib/gameplay.js?v=4';
+import { createGameplay } from './lib/gameplay.js?v=5';
 import { createParticles } from './lib/particles.js?v=1';
 
 export function startGame({ canvas, hud }) {
