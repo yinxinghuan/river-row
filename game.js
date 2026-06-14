@@ -9,7 +9,7 @@
 
 import * as THREE from 'three';
 import { applyCurve, updateCurve } from './lib/curve.js?v=5';
-import { buildWater } from './lib/water.js?v=11';
+import { buildWater } from './lib/water.js?v=12';
 import { createSegmentManager, TEMPERATE } from './lib/segments.js?v=2';
 import { createWorld } from './lib/world.js?v=3';
 import { buildBoat, buildWake, attachRower, tickBoat } from './lib/boat.js?v=7';
