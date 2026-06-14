@@ -71,31 +71,26 @@
     50%     { filter:brightness(.55) saturate(1.4); }
   }
 
-  /* ── Charge ring — fills around the touch point while finger is held ── */
-  #charge {
-    position:fixed; pointer-events:none; z-index:8;
-    width:96px; height:96px;
-    margin-left:-48px; margin-top:-48px;
-    opacity:0; transition:opacity .12s ease;
+  /* ── BOOST chip — pops in when boat rides the speed lane ── */
+  #boost {
+    top:calc(max(28px,calc(env(safe-area-inset-top) + 14px)) + 78px); left:50%;
+    transform:translateX(-50%) translateY(4px);
+    font-weight:700; font-size:13px; letter-spacing:.20em; line-height:1; color:#0a3140;
+    background:linear-gradient(140deg, #c6f8ff, #6ee9ff 55%, #2cc6ff);
+    border:1px solid rgba(255,255,255,.85);
+    box-shadow:0 8px 22px rgba(40,180,230,.45), 0 0 22px rgba(110,233,255,.55);
+    padding:6px 14px; border-radius:999px;
+    opacity:0; transition:opacity .22s ease, transform .22s ease;
+    text-shadow:0 1px 0 rgba(255,255,255,.6);
   }
-  #charge.show { opacity:.95; }
-  #charge svg { width:100%; height:100%; display:block; }
-  #charge .bg {
-    fill:rgba(22,32,56,.22);
-    stroke:rgba(255,255,255,.55);
-    stroke-width:3;
+  #boost.show {
+    opacity:1; transform:translateX(-50%) translateY(0);
+    animation:rr-boost-pulse 1.2s ease-in-out infinite;
   }
-  #charge .fill {
-    fill:none;
-    stroke:#4dd683;
-    stroke-width:6;
-    stroke-linecap:round;
-    filter:drop-shadow(0 0 6px rgba(77,212,195,.85));
-    transform:rotate(-90deg);
-    transform-origin:48px 48px;
-    transition:stroke-dashoffset .08s linear, stroke .2s ease;
+  @keyframes rr-boost-pulse {
+    0%,100% { box-shadow:0 8px 22px rgba(40,180,230,.45), 0 0 22px rgba(110,233,255,.55); }
+    50%     { box-shadow:0 8px 22px rgba(40,180,230,.6),  0 0 34px rgba(180,247,255,.85); }
   }
-  #charge.full .fill { stroke:#ffd84d; filter:drop-shadow(0 0 9px rgba(255,216,77,.9)); }
 
   /* ── Combo chip — frosted pill below score, shows during chain ── */
   #combo {
@@ -134,43 +129,42 @@
   }
   #title.hidden { opacity:0; transform:translate(-50%,-12px); }
 
-  /* ── Tutorial demo — full animated walk-through at preroll. Shows the
-        press-charge-release cycle every 3 seconds with a real-looking
-        radial ring fill and side-tap arrows. ── */
+  /* ── Tutorial demo — finger slides left and right over a track to
+        teach "touch / drag to steer". Loops continuously at preroll. ── */
   #hint {
-    bottom:calc(13% + env(safe-area-inset-bottom)); left:50%; transform:translateX(-50%);
+    bottom:calc(15% + env(safe-area-inset-bottom)); left:50%; transform:translateX(-50%);
     display:flex; flex-direction:column; align-items:center; gap:14px;
     opacity:0; transition:opacity .45s ease;
     pointer-events:none;
   }
   #hint.show { opacity:1; }
-  #hint .tut-demo {
-    position:relative; width:128px; height:128px;
+  #hint .tut-track {
+    position:relative; width:220px; height:74px;
+    display:flex; align-items:center; justify-content:space-between;
+    padding:0 16px;
   }
-  #hint .tut-demo svg.ring {
-    position:absolute; inset:0;
-    width:100%; height:100%;
-    display:block;
+  #hint .tut-track .lane {
+    position:absolute; left:14px; right:14px; top:50%; height:5px;
+    transform:translateY(-50%); border-radius:999px;
+    background:linear-gradient(90deg,
+      rgba(255,255,255,0) 0%,
+      rgba(255,255,255,.55) 18%,
+      rgba(255,255,255,.55) 82%,
+      rgba(255,255,255,0) 100%);
   }
-  #hint .tut-demo svg.ring .bg {
-    fill:rgba(22,32,56,.28);
-    stroke:rgba(255,255,255,.55); stroke-width:3;
+  #hint .tut-track .arrow {
+    z-index:2; font-size:22px; color:#fff;
+    text-shadow:0 2px 8px rgba(22,40,82,.65);
+    animation:rr-tut-arrow 2.4s ease-in-out infinite;
   }
-  #hint .tut-demo svg.ring .fill {
-    fill:none;
-    stroke:#4dd683; stroke-width:6; stroke-linecap:round;
-    stroke-dasharray:283; stroke-dashoffset:283;
-    filter:drop-shadow(0 0 6px rgba(77,212,195,.7));
-    transform:rotate(-90deg); transform-origin:64px 64px;
-    animation:rr-tut-charge 3s ease-in-out infinite;
-  }
-  #hint .tut-demo .finger {
-    position:absolute; left:50%; top:50%;
-    width:46px; height:46px;
+  #hint .tut-track .arrow.r { animation-delay:1.2s; }
+  #hint .tut-track .finger {
+    position:absolute; left:50%; top:50%; width:46px; height:46px;
     transform:translate(-50%, -50%);
-    animation:rr-tut-finger 3s ease-in-out infinite;
+    animation:rr-tut-swipe 2.4s ease-in-out infinite;
+    z-index:3;
   }
-  #hint .tut-demo .finger svg {
+  #hint .tut-track .finger svg {
     width:100%; height:100%; display:block; fill:#fff;
     filter:drop-shadow(0 0 6px rgba(22,135,124,.6)) drop-shadow(0 2px 4px rgba(0,0,0,.32));
   }
@@ -178,30 +172,23 @@
     font-weight:700; font-size:14px; letter-spacing:.16em; text-transform:uppercase;
     color:#fff; text-shadow:0 2px 8px rgba(22,40,82,.65);
   }
-  #hint .tut-steer {
-    display:flex; align-items:center; gap:8px;
-    font-weight:600; font-size:12px; letter-spacing:.08em; text-transform:uppercase;
-    color:rgba(255,255,255,.86); text-shadow:0 2px 6px rgba(22,40,82,.5);
-  }
-  #hint .tut-steer .arrow {
-    display:inline-block; font-size:18px;
-    animation:rr-tut-arrow 1.4s ease-in-out infinite;
-  }
-  #hint .tut-steer .arrow.r { animation-delay:.7s; }
-  @keyframes rr-tut-charge {
-    0%, 8%   { stroke-dashoffset:283; }
-    60%, 70% { stroke-dashoffset:0; }
-    75%, 100% { stroke-dashoffset:283; }
-  }
-  @keyframes rr-tut-finger {
-    0%, 8%    { transform:translate(-50%, -50%) scale(1); }
-    18%, 60%  { transform:translate(-50%, -42%) scale(.92); }
-    72%       { transform:translate(-50%, -62%) scale(1.12); }
-    82%, 100% { transform:translate(-50%, -50%) scale(1); }
+  @keyframes rr-tut-swipe {
+    0%   { transform:translate(calc(-50% - 56px), -50%); }
+    25%  { transform:translate(calc(-50% - 56px), -50%); }
+    50%  { transform:translate(calc(-50% + 56px), -50%); }
+    75%  { transform:translate(calc(-50% + 56px), -50%); }
+    100% { transform:translate(calc(-50% - 56px), -50%); }
   }
   @keyframes rr-tut-arrow {
-    0%, 100% { transform:translateX(0); opacity:.7; }
+    0%, 100% { transform:translateX(0); opacity:.55; }
     50%      { transform:translateX(-4px); opacity:1; }
+  }
+  #hint .tut-track .arrow.r {
+    animation-name:rr-tut-arrow-r;
+  }
+  @keyframes rr-tut-arrow-r {
+    0%, 100% { transform:translateX(0); opacity:.55; }
+    50%      { transform:translateX(4px); opacity:1; }
   }
 
   /* ── In-play touch indicator — ring + center dot at finger position,
@@ -391,28 +378,22 @@
   <canvas id="c"></canvas>
   <div id="score" class="hud">0</div>
   <div id="combo" class="hud"></div>
+  <div id="boost" class="hud">BOOST</div>
   <div id="hp" class="hud"><div class="fill"></div></div>
-  <div id="charge"><svg viewBox="0 0 96 96">
-    <circle class="bg" cx="48" cy="48" r="36"/>
-    <circle class="fill" cx="48" cy="48" r="36"
-            stroke-dasharray="226.2" stroke-dashoffset="226.2"/>
-  </svg></div>
   <div id="title" class="hud">
     <span class="brand">River Row</span>
-    <span class="sub">hold &amp; release to row</span>
+    <span class="sub">touch &amp; drag to steer</span>
   </div>
   <div id="hint" class="hud">
-    <div class="tut-demo">
-      <svg class="ring" viewBox="0 0 128 128">
-        <circle class="bg" cx="64" cy="64" r="45"/>
-        <circle class="fill" cx="64" cy="64" r="45"/>
-      </svg>
+    <div class="tut-track">
+      <span class="arrow">◀</span>
+      <div class="lane"></div>
       <div class="finger">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 11.24V7.5C9 6.12 10.12 5 11.5 5S14 6.12 14 7.5v3.74c1.21-.81 2-2.18 2-3.74C16 5.01 13.99 3 11.5 3S7 5.01 7 7.5c0 1.56.79 2.93 2 3.74zm9.84 4.63l-4.54-2.26c-.17-.07-.35-.11-.54-.11H13v-6c0-.83-.67-1.5-1.5-1.5S10 6.67 10 7.5v10.74l-3.43-.72c-.08-.01-.15-.03-.24-.03-.31 0-.59.13-.79.33l-.79.8 4.94 4.94c.27.27.65.44 1.06.44h6.79c.75 0 1.33-.55 1.44-1.28l.75-5.27c.01-.07.02-.14.02-.2 0-.62-.38-1.16-.92-1.38z"/></svg>
       </div>
+      <span class="arrow r">▶</span>
     </div>
-    <div class="tut-label">Hold &amp; Release to Row</div>
-    <div class="tut-steer"><span class="arrow">◀</span><span>tap side to steer</span><span class="arrow r">▶</span></div>
+    <div class="tut-label">Touch &amp; Drag to Steer</div>
   </div>
   <div id="touch"></div>
   <div id="touch-ripple"></div>
@@ -450,11 +431,12 @@
 </script>
 
 <script type="module">
-import { startGame } from './game.js?v=40';
+import { startGame } from './game.js?v=41';
 
 const $ = (s) => document.querySelector(s);
 const scoreEl = $('#score');
 const comboEl = $('#combo');
+const boostEl = $('#boost');
 const hpEl    = $('#hp');
 const titleEl = $('#title');
 const hintEl  = $('#hint');
@@ -462,11 +444,8 @@ const overEl  = $('#over');
 const finalScoreEl = $('#finalScore');
 const finalBestEl  = $('#finalBest');
 const hpFillEl = hpEl.querySelector('.fill');
-const chargeEl = $('#charge');
-const chargeFillEl = chargeEl.querySelector('.fill');
 const touchEl = $('#touch');
 const touchRippleEl = $('#touch-ripple');
-const CHARGE_CIRC = 226.2;          // 2π × r (r=36)
 
 let lastScore = 0;
 let scoreBumpT = null;
@@ -498,30 +477,21 @@ const hud = {
     hpFillEl.style.width = pct + '%';
     hpFillEl.classList.toggle('low', pct < 30);
   },
-  setCharge(t, x, y) {
-    if (t > 0) {
-      chargeEl.classList.add('show');
-      chargeEl.classList.toggle('full', t >= 0.98);
-      chargeEl.style.left = x + 'px';
-      chargeEl.style.top  = y + 'px';
-      chargeFillEl.style.strokeDashoffset = String(CHARGE_CIRC * (1 - t));
-    } else {
-      chargeEl.classList.remove('show', 'full');
-    }
+  setBoost(on) {
+    boostEl.classList.toggle('show', !!on);
   },
   setPhase(p) {
     if (p === 'preroll') {
       scoreEl.classList.remove('show');
       comboEl.classList.remove('show');
+      boostEl.classList.remove('show');
       hpEl.classList.remove('show');
       titleEl.classList.remove('hidden');
       hintEl.classList.add('show');                // tutorial visible at preroll
       overEl.classList.remove('show');
       lastScore = 0;
-      // reset HP bar to full
       hpFillEl.style.width = '100%';
       hpFillEl.classList.remove('low');
-      chargeEl.classList.remove('show', 'full');
     } else if (p === 'play') {
       scoreEl.classList.add('show');
       hpEl.classList.add('show');
@@ -531,9 +501,9 @@ const hud = {
     } else if (p === 'dead') {
       overEl.classList.add('show');
       comboEl.classList.remove('show');
+      boostEl.classList.remove('show');
       hpEl.classList.remove('show');
       hintEl.classList.remove('show');
-      chargeEl.classList.remove('show', 'full');
     }
   },
   setDeath({ score, best }) {
@@ -655,6 +625,25 @@ refreshLB();
 
 const canvas = $('#c');
 startGame({ canvas, hud });
+
+// ── Touch indicator visuals — follow finger position during steer ─────────
+canvas.addEventListener('pointerdown', (e) => {
+  const x = e.clientX, y = e.clientY;
+  touchEl.style.left = x + 'px';
+  touchEl.style.top  = y + 'px';
+  touchEl.classList.add('show');
+  touchRippleEl.style.left = x + 'px';
+  touchRippleEl.style.top  = y + 'px';
+  touchRippleEl.classList.remove('go');
+  void touchRippleEl.offsetWidth;
+  touchRippleEl.classList.add('go');
+}, { passive: true });
+canvas.addEventListener('pointermove', (e) => {
+  touchEl.style.left = e.clientX + 'px';
+  touchEl.style.top  = e.clientY + 'px';
+}, { passive: true });
+canvas.addEventListener('pointerup',     () => touchEl.classList.remove('show'), { passive: true });
+canvas.addEventListener('pointercancel', () => touchEl.classList.remove('show'), { passive: true });
 
 $('#again').addEventListener('click', () => {
   // restart via the gameplay state machine
