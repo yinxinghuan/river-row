@@ -45,6 +45,27 @@
     100% { transform:translateX(-50%) scale(1); }
   }
 
+  /* ── Hearts — three petal hearts top-left, fade to grey as HP drops ── */
+  #hp {
+    top:max(28px,calc(env(safe-area-inset-top) + 14px)); left:12px;
+    display:flex; gap:6px; opacity:0; transition:opacity .3s ease;
+  }
+  #hp.show { opacity:1; }
+  #hp .h {
+    width:30px; height:30px; display:block;
+    filter:drop-shadow(0 2px 4px rgba(22,40,82,.4));
+    transition:filter .25s ease, transform .25s ease;
+  }
+  #hp .h.gone {
+    filter:drop-shadow(0 1px 2px rgba(22,40,82,.3)) saturate(0) brightness(.7);
+    transform:scale(.86);
+  }
+  #hp .h.pop { animation:rr-hpop .35s cubic-bezier(.3,1.6,.5,1); }
+  @keyframes rr-hpop {
+    0%   { transform:scale(1.45); filter:drop-shadow(0 1px 2px rgba(22,40,82,.3)) saturate(0) brightness(1.2); }
+    100% { transform:scale(.86); filter:drop-shadow(0 1px 2px rgba(22,40,82,.3)) saturate(0) brightness(.7); }
+  }
+
   /* ── Combo chip — frosted pill below score, shows during chain ── */
   #combo {
     top:calc(max(28px,calc(env(safe-area-inset-top) + 14px)) + 72px); left:50%;
@@ -269,6 +290,11 @@
   <canvas id="c"></canvas>
   <div id="score" class="hud">0</div>
   <div id="combo" class="hud"></div>
+  <div id="hp" class="hud">
+    <svg class="h" viewBox="0 0 24 24"><path d="M12 21s-7-4.5-9.5-9C.5 7.5 4 3 8 3c2 0 3 1 4 2 1-1 2-2 4-2 4 0 7.5 4.5 5.5 9C19 16.5 12 21 12 21Z" fill="#ff4d77"/></svg>
+    <svg class="h" viewBox="0 0 24 24"><path d="M12 21s-7-4.5-9.5-9C.5 7.5 4 3 8 3c2 0 3 1 4 2 1-1 2-2 4-2 4 0 7.5 4.5 5.5 9C19 16.5 12 21 12 21Z" fill="#ff4d77"/></svg>
+    <svg class="h" viewBox="0 0 24 24"><path d="M12 21s-7-4.5-9.5-9C.5 7.5 4 3 8 3c2 0 3 1 4 2 1-1 2-2 4-2 4 0 7.5 4.5 5.5 9C19 16.5 12 21 12 21Z" fill="#ff4d77"/></svg>
+  </div>
   <div id="title" class="hud">
     <span class="brand">River Row</span>
     <span class="sub">drag to steer</span>
@@ -318,6 +344,8 @@ import { startGame } from './game.js?v=23';
 const $ = (s) => document.querySelector(s);
 const scoreEl = $('#score');
 const comboEl = $('#combo');
+const hpEl    = $('#hp');
+const hpHearts = hpEl.querySelectorAll('.h');
 const titleEl = $('#title');
 const hintEl  = $('#hint');
 const overEl  = $('#over');
@@ -348,22 +376,37 @@ const hud = {
     }
   },
   setBest(n)  { finalBestEl.textContent = String(n); },
+  setHp(n) {
+    hpHearts.forEach((h, i) => {
+      const wasGone = h.classList.contains('gone');
+      const nowGone = i >= n;
+      if (nowGone && !wasGone) {
+        h.classList.remove('pop'); void h.offsetWidth; h.classList.add('pop');
+      }
+      h.classList.toggle('gone', nowGone);
+    });
+  },
   setPhase(p) {
     if (p === 'preroll') {
       scoreEl.classList.remove('show');
       comboEl.classList.remove('show');
+      hpEl.classList.remove('show');
       titleEl.classList.remove('hidden');
       hintEl.classList.add('show');
       overEl.classList.remove('show');
       lastScore = 0;
+      // reset hearts to full
+      hpHearts.forEach(h => h.classList.remove('gone', 'pop'));
     } else if (p === 'play') {
       scoreEl.classList.add('show');
+      hpEl.classList.add('show');
       titleEl.classList.add('hidden');
       hintEl.classList.remove('show');
       overEl.classList.remove('show');
     } else if (p === 'dead') {
       overEl.classList.add('show');
       comboEl.classList.remove('show');
+      hpEl.classList.remove('show');
     }
   },
   setDeath({ score, best }) {
