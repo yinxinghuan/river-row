@@ -9,9 +9,9 @@
 
 import * as THREE from 'three';
 import { applyCurve, updateCurve } from './lib/curve.js?v=4';
-import { buildWater } from './lib/water.js?v=7';
+import { buildWater } from './lib/water.js?v=8';
 import { createSegmentManager, TEMPERATE } from './lib/segments.js?v=2';
-import { createWorld } from './lib/world.js?v=1';
+import { createWorld } from './lib/world.js?v=3';
 import { buildBoat, buildWake, attachRower, tickBoat } from './lib/boat.js?v=6';
 import { CHARACTERS } from './builders/characters.js?v=1';
 import { createGameplay } from './lib/gameplay.js?v=5';
@@ -166,6 +166,11 @@ export function startGame({ canvas, hud }) {
     const dt = Math.min(0.05, clock.getDelta());
     t += dt;
     updateCurve(camera, t);
+    // Water is a finite painterly tile — slide it with the boat so the boat
+    // is always near the centre of the plane and never sails off the edge
+    // ("水消失" bug). The water's surface noise + wave shader use world XZ,
+    // so following the boat doesn't make the painterly facets jump.
+    water.position.z = boat.position.z;
     if (water.userData.tick) water.userData.tick(t, dt);
     tickBoat(boat, t, dt);
     // gameplay drives boat XZ + camera follow + collision + scoring + particles
