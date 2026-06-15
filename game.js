@@ -9,8 +9,8 @@
 
 import * as THREE from 'three';
 import { applyCurve, updateCurve } from './lib/curve.js?v=7';
-import { buildWater } from './lib/water.js?v=15';
-import { createSegmentManager, TEMPERATE } from './lib/segments.js?v=4';
+import { buildWater } from './lib/water.js?v=16';
+import { createSegmentManager, TEMPERATE } from './lib/segments.js?v=5';
 import { createWorld } from './lib/world.js?v=4';
 import { buildBoat, buildWake, attachRower, tickBoat } from './lib/boat.js?v=11';
 import { CHARACTERS } from './builders/characters.js?v=1';
@@ -56,6 +56,13 @@ export function startGame({ canvas, hud }) {
         sunDir: { value: TEMPERATE.sunDir.clone() },
       },
       vertexShader: `varying vec3 vP; void main(){ vP = position; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`,
+      // Three-stop sky:
+      //   bot  — soft horizon glow at h≈0 (matches scene.fog.color exactly so
+      //          the water + bank haze dissolves into the sky with no seam)
+      //   mid  — daytime sky band at h≈0.30 (where the player's gaze sits)
+      //   top  — zenith at h≈0.75 and above
+      // smoothstep instead of hard mix factors gives the visible window
+      // (h ∈ 0–0.45) a true gradient instead of being stuck near "mid".
       fragmentShader: `
         varying vec3 vP;
         uniform vec3 top; uniform vec3 mid; uniform vec3 bot;
@@ -63,9 +70,11 @@ export function startGame({ canvas, hud }) {
         void main(){
           vec3 n = normalize(vP);
           float h = n.y;
-          vec3 c = h > 0.0
-            ? mix(mid, top, clamp(h*1.55, 0.0, 1.0))
-            : mix(mid, bot, clamp(-h*2.6, 0.0, 1.0));
+          float t1 = smoothstep(0.0, 0.18, h);     // horizon glow → mid
+          float t2 = smoothstep(0.22, 0.75, h);    // mid → zenith
+          vec3 c = mix(bot, mid, t1);
+          c = mix(c, top, t2);
+          if (h < 0.0) c = bot;                    // below horizon stays at the glow
           float s = max(0.0, dot(n, sunDir));
           c = mix(c, sun, pow(s, 5.0) * 0.34);
           gl_FragColor = vec4(c, 1.0);
