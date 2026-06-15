@@ -481,7 +481,7 @@
 </script>
 
 <script type="module">
-import { startGame } from './game.js?v=50';
+import { startGame } from './game.js?v=51';
 
 const $ = (s) => document.querySelector(s);
 const scoreEl = $('#score');
@@ -692,11 +692,68 @@ function submitScore(s) {
   } catch (e) { /* ignore */ }
 }
 
+// ── Leaderboard-beat 1:1 notification ─────────────────────────────────────
+// On run start (transition to play), snapshot my best on the wall. On death,
+// after submitting my new score, find the user immediately below my new
+// score WHO WAS PREVIOUSLY ABOVE my pre-run best — they're the one I just
+// passed. Push them a notify. Self-guard + silent failures.
+let preRunBest = 0;
+const origSetPhase = hud.setPhase;
+hud.setPhase = function (p) {
+  origSetPhase.call(hud, p);
+  if (p === 'play') {
+    const A = window.Aigram;
+    const meId = A && String(A.telegramId);
+    if (meId && lbData.rows.length) {
+      const me = lbData.rows.find(r => String(r.user_id) === meId);
+      preRunBest = me ? Number(me.score) || 0 : 0;
+    }
+  }
+};
+
+async function trySendBeatNotify(myScore) {
+  const A = window.Aigram;
+  if (!A || !A.canRank || !A.telegramId) return;
+  if (myScore <= preRunBest) return;          // run didn't beat my own record → nobody else passed
+  try {
+    const res = await A.callAigramAPI(
+      '/note/aigram/ai/game/rank/score/list/by/session_id?session_id=' + A.gameUuid, 'GET');
+    const rows = Array.isArray(res) ? res : (res && res.data) || [];
+    const meId = String(A.telegramId);
+    // user I just surpassed = closest user whose previous score sits in (preRunBest, myScore)
+    const beaten = rows
+      .filter(r => String(r.user_id) !== meId)
+      .map(r => ({ id: String(r.user_id), score: Number(r.score) || 0, name: r.user_name }))
+      .filter(r => r.score < myScore && r.score > preRunBest)
+      .sort((a, b) => b.score - a.score)[0];
+    if (!beaten) return;
+    A.postAigramAPI('/note/aigram/ai/game/record/play', {
+      session_id: A.gameUuid,
+      event: 'score_beat',
+      config_json: {
+        actions: [{
+          type: 'notify',
+          target_user_id: beaten.id,
+          image: {
+            ref_url: 'https://yinxinghuan.github.io/games/posters/river-row.png',
+            prompt: 'A wooden rowboat racing through a cyan river with V-shaped foam wake, distant red sandstone canyon, painterly low-poly water.',
+          },
+          message: {
+            template: '{sender_name} just rowed past your record — ' + Math.round(myScore) + ' m on River Row.',
+            variables: ['sender_name'],
+          },
+        }],
+      },
+    });
+  } catch (e) { /* silent */ }
+}
+
 // HUD additions for leaderboard hook (called by gameplay on death)
 const baseSetDeath = hud.setDeath;
 hud.setDeath = function ({ score, best }) {
   baseSetDeath.call(hud, { score, best });
   submitScore(score);
+  trySendBeatNotify(score);
   setTimeout(refreshLB, 1200);
 };
 
