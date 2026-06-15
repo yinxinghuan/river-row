@@ -30,10 +30,11 @@
   #c { display:block; width:100%; height:100%; touch-action:none; }
   .hud { position:fixed; pointer-events:none; z-index:5; }
 
-  /* ── Score — top centre, big bold number, opacity gates on play state ── */
+  /* ── Score — pushed below the HP bar + leaderboard pill so the big
+        number doesn't shoulder them ── */
   #score {
-    top:max(28px,calc(env(safe-area-inset-top) + 14px)); left:50%; transform:translateX(-50%);
-    font-weight:700; color:#fff; font-size:64px; line-height:1;
+    top:max(70px,calc(env(safe-area-inset-top) + 58px)); left:50%; transform:translateX(-50%);
+    font-weight:700; color:#fff; font-size:60px; line-height:1;
     font-variant-numeric:tabular-nums; letter-spacing:.01em;
     text-shadow:0 2px 1px rgba(34,50,74,.32), 0 6px 22px rgba(20,40,90,.5);
     opacity:0; transition:opacity .3s ease;
@@ -70,10 +71,57 @@
     0%,100% { filter:brightness(1); }
     50%     { filter:brightness(.55) saturate(1.4); }
   }
+  /* Impact: capsule shakes hard, bar flashes white-red, glow ring puffs out */
+  #hp.hit { animation:rr-hp-shake .42s cubic-bezier(.36,.07,.19,.97); }
+  #hp.hit .fill { animation:rr-hp-flash .42s ease-out; }
+  @keyframes rr-hp-shake {
+    0%   { transform:translateX(0); }
+    15%  { transform:translateX(-7px); }
+    30%  { transform:translateX(6px); }
+    45%  { transform:translateX(-5px); }
+    60%  { transform:translateX(4px); }
+    75%  { transform:translateX(-2px); }
+    100% { transform:translateX(0); }
+  }
+  @keyframes rr-hp-flash {
+    0%   { filter:brightness(2.4) saturate(0); box-shadow:0 0 28px rgba(255,80,80,1), inset 0 1px 0 rgba(255,255,255,.45); }
+    35%  { filter:brightness(1.6) saturate(1.2); box-shadow:0 0 18px rgba(255,80,80,.7), inset 0 1px 0 rgba(255,255,255,.45); }
+    100% { filter:brightness(1) saturate(1); box-shadow:0 0 12px rgba(77,212,195,.45), inset 0 1px 0 rgba(255,255,255,.45); }
+  }
+  /* Full-screen edge red vignette — radial dark to transparent center, brief */
+  #dmgFlash {
+    position:fixed; inset:0; pointer-events:none; z-index:9;
+    opacity:0;
+    background:radial-gradient(ellipse at center,
+      rgba(255,40,40,0) 32%,
+      rgba(255,40,40,.18) 58%,
+      rgba(180,20,20,.55) 100%);
+  }
+  #dmgFlash.go { animation:rr-dmg-vignette .55s ease-out forwards; }
+  @keyframes rr-dmg-vignette {
+    0%   { opacity:0; }
+    20%  { opacity:1; }
+    100% { opacity:0; }
+  }
+  /* Floating damage number rising above the HP bar */
+  #dmgNum {
+    position:fixed; left:90px; pointer-events:none; z-index:9;
+    top:max(36px,calc(env(safe-area-inset-top) + 22px));
+    font-weight:700; font-size:22px; line-height:1; color:#fff;
+    text-shadow:0 2px 1px rgba(120,0,0,.6), 0 4px 14px rgba(255,40,40,.7);
+    opacity:0; transform:translateY(0);
+  }
+  #dmgNum.go { animation:rr-dmg-num .85s ease-out forwards; }
+  @keyframes rr-dmg-num {
+    0%   { opacity:0; transform:translateY(0) scale(.7); }
+    15%  { opacity:1; transform:translateY(-2px) scale(1.15); }
+    50%  { opacity:1; transform:translateY(-16px) scale(1); }
+    100% { opacity:0; transform:translateY(-36px) scale(.9); }
+  }
 
   /* ── BOOST chip — pops in when boat rides the speed lane ── */
   #boost {
-    top:calc(max(28px,calc(env(safe-area-inset-top) + 14px)) + 78px); left:50%;
+    top:calc(max(70px,calc(env(safe-area-inset-top) + 58px)) + 76px); left:50%;
     transform:translateX(-50%) translateY(4px);
     font-weight:700; font-size:13px; letter-spacing:.20em; line-height:1; color:#0a3140;
     background:linear-gradient(140deg, #c6f8ff, #6ee9ff 55%, #2cc6ff);
@@ -94,7 +142,7 @@
 
   /* ── Combo chip — frosted pill below score, shows during chain ── */
   #combo {
-    top:calc(max(28px,calc(env(safe-area-inset-top) + 14px)) + 72px); left:50%;
+    top:calc(max(70px,calc(env(safe-area-inset-top) + 58px)) + 70px); left:50%;
     transform:translateX(-50%) translateY(4px);
     font-weight:600; font-size:14px; letter-spacing:.10em; line-height:1; color:#16877c;
     background:linear-gradient(145deg, rgba(255,255,255,.85), rgba(255,255,255,.7));
@@ -380,6 +428,8 @@
   <div id="combo" class="hud"></div>
   <div id="boost" class="hud">BOOST</div>
   <div id="hp" class="hud"><div class="fill"></div></div>
+  <div id="dmgNum" class="hud"></div>
+  <div id="dmgFlash"></div>
   <div id="title" class="hud">
     <span class="brand">River Row</span>
     <span class="sub">touch &amp; drag to steer</span>
@@ -431,7 +481,7 @@
 </script>
 
 <script type="module">
-import { startGame } from './game.js?v=49';
+import { startGame } from './game.js?v=50';
 
 const $ = (s) => document.querySelector(s);
 const scoreEl = $('#score');
@@ -444,7 +494,13 @@ const overEl  = $('#over');
 const finalScoreEl = $('#finalScore');
 const finalBestEl  = $('#finalBest');
 const hpFillEl = hpEl.querySelector('.fill');
+const dmgNumEl = $('#dmgNum');
+const dmgFlashEl = $('#dmgFlash');
 const touchEl = $('#touch');
+let lastHp = 100;
+let hpHitTimer = null;
+let dmgNumTimer = null;
+let dmgFlashTimer = null;
 const touchRippleEl = $('#touch-ripple');
 
 let lastScore = 0;
@@ -472,10 +528,30 @@ const hud = {
   },
   setBest(n)  { finalBestEl.textContent = String(n); },
   setHp(n) {
-    // n is 0..100 now
     const pct = Math.max(0, Math.min(100, n));
+    const dmg = lastHp - pct;
     hpFillEl.style.width = pct + '%';
     hpFillEl.classList.toggle('low', pct < 30);
+    // ── impact feedback: anything > a couple HP off in a single tick = hit
+    if (dmg > 2.5) {
+      // bar shake + flash
+      hpEl.classList.remove('hit'); void hpEl.offsetWidth;
+      hpEl.classList.add('hit');
+      clearTimeout(hpHitTimer);
+      hpHitTimer = setTimeout(() => hpEl.classList.remove('hit'), 460);
+      // floating damage number
+      dmgNumEl.textContent = '-' + Math.round(dmg);
+      dmgNumEl.classList.remove('go'); void dmgNumEl.offsetWidth;
+      dmgNumEl.classList.add('go');
+      clearTimeout(dmgNumTimer);
+      dmgNumTimer = setTimeout(() => dmgNumEl.classList.remove('go'), 900);
+      // screen-edge red vignette
+      dmgFlashEl.classList.remove('go'); void dmgFlashEl.offsetWidth;
+      dmgFlashEl.classList.add('go');
+      clearTimeout(dmgFlashTimer);
+      dmgFlashTimer = setTimeout(() => dmgFlashEl.classList.remove('go'), 580);
+    }
+    lastHp = pct;
   },
   setBoost(on) {
     boostEl.classList.toggle('show', !!on);
@@ -492,6 +568,10 @@ const hud = {
       lastScore = 0;
       hpFillEl.style.width = '100%';
       hpFillEl.classList.remove('low');
+      lastHp = 100;
+      hpEl.classList.remove('hit');
+      dmgNumEl.classList.remove('go');
+      dmgFlashEl.classList.remove('go');
     } else if (p === 'play') {
       scoreEl.classList.add('show');
       hpEl.classList.add('show');
